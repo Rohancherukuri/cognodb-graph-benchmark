@@ -1,0 +1,54 @@
+# Self-hosted comparison platforms, each capped to match CognoDB's free-tier
+# specs (0.5 vCPU / 256MB RAM / 1GB disk) so no platform gets a hardware
+# advantage - see config/platforms.yaml and README "Fairness" section.
+#
+#   docker compose up -d memgraph arangodb dgraph      # start comparison DBs
+#   docker compose down                                # stop + remove them
+#   docker compose --profile runner run --rm benchmark <cli args>
+#       # run the harness itself inside a container instead of locally
+
+services:
+  memgraph:
+    image: memgraph/memgraph:2.18.1
+    container_name: bench-memgraph
+    ports:
+      - "7688:7687"
+    cpus: 0.5
+    mem_limit: 256m
+    command: ["--memory-limit=200"]
+
+  arangodb:
+    image: arangodb:3.12
+    container_name: bench-arangodb
+    environment:
+      ARANGO_ROOT_PASSWORD: ${ARANGODB_PASSWORD:-changeme}
+    ports:
+      - "8529:8529"
+    cpus: 0.5
+    mem_limit: 256m
+
+  dgraph:
+    image: dgraph/standalone:v24.0.0
+    container_name: bench-dgraph
+    ports:
+      - "8080:8080"
+      - "9080:9080"
+    cpus: 0.5
+    mem_limit: 256m
+
+  # Optional: run the benchmark harness itself in a container instead of a
+  # local venv. Not started by `docker compose up` by default (profile-gated).
+  benchmark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bench-runner
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+    depends_on:
+      - memgraph
+      - arangodb
+      - dgraph
+    profiles: ["runner"]

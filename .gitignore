@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.DS_Store
+
+# downloaded / generated dataset (regenerate with `benchmark dataset prepare`)
+data/raw/
+data/processed/
+
+# docker volumes if any get created locally
+docker/volumes/

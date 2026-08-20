@@ -1,0 +1,76 @@
+# cognodb-graph-benchmark
+
+```
+├── 📁 .github
+│   └── 📁 workflows
+│       └── ⚙️ ci.yml
+├── 📁 config
+│   └── ⚙️ platforms.yaml
+├── 📁 data
+├── 📁 docs
+│   ├── 📝 ANALYSIS.md
+│   └── 📝 METHODOLOGY.md
+├── 📁 results
+│   └── ⚙️ .gitkeep
+├── 📁 scripts
+│   ├── 📄 run_all.sh
+│   ├── 📄 start_infra.sh
+│   └── 📄 stop_infra.sh
+├── 📁 src
+│   └── 📁 benchmark
+│       ├── 📁 adapters
+│       │   ├── 🐍 __init__.py
+│       │   ├── 🐍 arangodb_adapter.py
+│       │   ├── 🐍 base.py
+│       │   ├── 🐍 bolt_cypher_adapter.py
+│       │   ├── 🐍 cognodb_adapter.py
+│       │   ├── 🐍 dgraph_adapter.py
+│       │   ├── 🐍 memgraph_adapter.py
+│       │   ├── 🐍 neo4j_aura_adapter.py
+│       │   └── 🐍 registry.py
+│       ├── 📁 dataset
+│       │   ├── 🐍 __init__.py
+│       │   ├── 🐍 load_epinions.py
+│       │   ├── 🐍 prepare.py
+│       │   └── 🐍 synthetic.py
+│       ├── 📁 metrics
+│       │   ├── 🐍 __init__.py
+│       │   ├── 🐍 models.py
+│       │   ├── 🐍 report.py
+│       │   └── 🐍 stats.py
+│       ├── 🐍 __init__.py
+│       ├── 🐍 cli.py
+│       ├── 🐍 config.py
+│       └── 🐍 orchestrator.py
+├── 📁 tests
+│   ├── 📁 dataset
+│   │   ├── 🐍 __init__.py
+│   │   ├── 🐍 test_load_dataset.py
+│   │   ├── 🐍 test_prepare.py
+│   │   └── 🐍 test_real_dataset.py
+│   ├── 📁 integration
+│   │   ├── 🐍 __init__.py
+│   │   └── 🐍 test_cognodb_integration.py
+│   ├── 🐍 __init__.py
+│   ├── 🐍 conftest.py
+│   ├── 🐍 fake_adapter.py
+│   ├── 🐍 test_cognodb_connection.py
+│   ├── 🐍 test_cognodb_queries.py
+│   ├── 🐍 test_orchestrator.py
+│   ├── 🐍 test_report.py
+│   └── 🐍 test_stats.py
+├── ⚙️ .env.example
+├── ⚙️ .gitignore
+├── 🐳 Dockerfile
+├── 📄 LICENSE
+├── 📄 Makefile
+├── 📝 README.md
+├── 📄 cognodb_project_structure.txt
+├── ⚙️ docker-compose.yml
+├── 🐍 main.py
+├── ⚙️ pyproject.toml
+├── 📄 requirements.txt
+├── 📄 setup_and_usage.txt
+└── 📄 uv.lock
+```
+---

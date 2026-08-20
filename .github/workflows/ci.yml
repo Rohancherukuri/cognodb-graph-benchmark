@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check src tests
+        continue-on-error: true  # non-blocking; fix findings as time allows
+
+      - name: Unit tests (FakeAdapter - no live DB credentials required)
+        run: pytest -q --cov=benchmark --cov-report=term-missing
+
+  # Live benchmark against real platforms is intentionally NOT run in CI:
+  # it needs long-lived cloud credentials (CognoDB, Neo4j Aura) as repo
+  # secrets and takes minutes, not seconds. Run it manually:
+  #   benchmark dataset prepare --source snap
+  #   benchmark bench run --platform all
+  #   benchmark report

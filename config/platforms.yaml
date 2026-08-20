@@ -1,0 +1,46 @@
+# Platforms enabled for a full run. Comment any out (or pass
+# `--platform name` on the CLI) to run a subset while iterating.
+enabled_platforms:
+  - cognodb
+  - neo4j_aura
+  - memgraph
+  - arangodb
+  - dgraph
+
+iterations: 100          # read-workload iterations, per section 5.2 (>=100 suggested)
+concurrency_levels: [1, 10, 40]
+mixed_duration_seconds: 30
+mixed_read_ratio: 0.8    # 80% reads / 20% writes in the mixed workload
+load_batch_size: 1000
+random_seed: 42
+
+# Advertised specs per platform - keep every platform at parity (assignment
+# section 3 "fairness" rule). CognoDB's free tier (0.5 vCPU / 256MB / 1GB) is
+# the ceiling; self-hosted platforms are capped to match it via docker-compose
+# `cpus:` / `mem_limit:`.
+platform_specs:
+  cognodb:
+    vcpu: 0.5
+    ram_mb: 256
+    disk_gb: 1
+    tier: "CognoDB free (c0)"
+  neo4j_aura:
+    vcpu: 0.5
+    ram_mb: 256
+    disk_gb: 1
+    tier: "Neo4j AuraDB Free"
+  memgraph:
+    vcpu: 0.5
+    ram_mb: 256
+    disk_gb: 1
+    tier: "self-hosted, docker cpus=0.5 mem_limit=256m"
+  arangodb:
+    vcpu: 0.5
+    ram_mb: 256
+    disk_gb: 1
+    tier: "self-hosted, docker cpus=0.5 mem_limit=256m"
+  dgraph:
+    vcpu: 0.5
+    ram_mb: 256
+    disk_gb: 1
+    tier: "self-hosted, docker cpus=0.5 mem_limit=256m"
