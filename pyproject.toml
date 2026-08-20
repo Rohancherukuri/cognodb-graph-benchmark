@@ -6,11 +6,13 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "click>=8.1.7",
+    "gqlalchemy>=1.10.0",
     "grpcio>=1.60.0",
     "neo4j>=5.22.0",
     "networkx>=3.3",
     "numpy>=1.26.0",
-    "pydgraph>=24.0.1",
+    "protobuf>=4.23.0,<5.0.0",
+    "pydgraph==24.3.0",
     "pytest>=9.1.1",
     "python-arango>=8.1.0",
     "python-dotenv>=1.0.1",
@@ -32,6 +34,11 @@ testpaths = ["tests"]
 
 markers = [
     "integration: tests that require external services",
-    "cognodb: tests that require CognoDB Cloud",
     "dataset: tests that require local benchmark datasets",
+    "cognodb: tests that require CognoDB Cloud",
+    "memgraph: tests requiring Memgraph",
+    "arangodb: tests requiring ArangoDB",
+    "neo4j: tests requiring Neo4j",
+    "dgraph: tests requiring Dgraph",
+    
 ]

@@ -4,146 +4,443 @@ import os
 import random
 import time
 from typing import Iterable
-from dotenv import load_dotenv
+
 from arango import ArangoClient
+from dotenv import load_dotenv
 
-from .base import EdgeRecord, GraphDBAdapter, NodeRecord
+from .base import (
+    EdgeRecord,
+    GraphDBAdapter,
+    NodeRecord,
+)
 
-load_dotenv()  # load env vars from .env file in project root
+
+load_dotenv()
+
 
 class ArangoDBAdapter(GraphDBAdapter):
-    """ArangoDB, self-hosted via docker-compose and capped to the same
-    vCPU/RAM as CognoDB's free tier. Uses the `persons` vertex collection
-    and `follows` edge collection inside a named graph, queried with AQL.
+    """
+    ArangoDB Cloud adapter.
 
-    Env vars: ARANGODB_URL, ARANGODB_USER, ARANGODB_PASSWORD, ARANGODB_DB.
+    Environment variables:
+        ARANGODB_URL
+        ARANGODB_USER
+        ARANGODB_PASSWORD
+        ARANGODB_DB
     """
 
     name = "arangodb"
     indexed_property = "handle"
+
     GRAPH_NAME = "social"
 
     def __init__(self) -> None:
-        self.url = os.environ.get("ARANGODB_URL", "http://localhost:8529")
-        self.user = os.environ.get("ARANGODB_USER", "root")
-        self.password = os.environ.get("ARANGODB_PASSWORD", "")
-        self.db_name = os.environ.get("ARANGODB_DB", "benchmark")
-        self._client = None
+        self.url = os.environ.get(
+            "ARANGODB_URL"
+        )
+
+        self.user = os.environ.get(
+            "ARANGODB_USER"
+        )
+
+        self.password = os.environ.get(
+            "ARANGODB_PASSWORD"
+        )
+
+        self.db_name = os.environ.get(
+            "ARANGODB_DB",
+            "_system",
+        )
+
+        self._client: ArangoClient | None = None
         self._db = None
 
     def connect(self) -> None:
-        self._client = ArangoClient(hosts=self.url)
-        sys_db = self._client.db("_system", username=self.user, password=self.password)
-        if not sys_db.has_database(self.db_name):
-            sys_db.create_database(self.db_name)
-        self._db = self._client.db(self.db_name, username=self.user, password=self.password)
-        if not self._db.has_collection("persons"):
-            self._db.create_collection("persons")
-        if not self._db.has_collection("follows"):
-            self._db.create_collection("follows", edge=True)
-        if not self._db.has_graph(self.GRAPH_NAME):
-            self._db.create_graph(
+        """
+        Connect directly to the configured
+        ArangoDB Cloud database.
+        """
+
+        if self._db is not None:
+            return
+
+        if not self.url:
+            raise RuntimeError(
+                "ARANGODB_URL is not configured."
+            )
+
+        if not self.user:
+            raise RuntimeError(
+                "ARANGODB_USER is not configured."
+            )
+
+        if not self.password:
+            raise RuntimeError(
+                "ARANGODB_PASSWORD is not configured."
+            )
+
+        self._client = ArangoClient(
+            hosts=self.url,
+        )
+
+        self._db = self._client.db(
+            self.db_name,
+            username=self.user,
+            password=self.password,
+        )
+
+        # Force a connectivity/authentication check.
+        self._db.version()
+
+        self._ensure_collections()
+        self._ensure_graph()
+
+    def _require_db(self):
+        if self._db is None:
+            raise RuntimeError(
+                "ArangoDB is not connected. "
+                "Call connect() first."
+            )
+
+        return self._db
+
+    def _ensure_collections(self) -> None:
+        db = self._require_db()
+
+        if not db.has_collection(
+            "persons"
+        ):
+            db.create_collection(
+                "persons"
+            )
+
+        if not db.has_collection(
+            "follows"
+        ):
+            db.create_collection(
+                "follows",
+                edge=True,
+            )
+
+    def _ensure_graph(self) -> None:
+        db = self._require_db()
+
+        if not db.has_graph(
+            self.GRAPH_NAME
+        ):
+            db.create_graph(
                 self.GRAPH_NAME,
                 edge_definitions=[
                     {
                         "edge_collection": "follows",
-                        "from_vertex_collections": ["persons"],
-                        "to_vertex_collections": ["persons"],
+                        "from_vertex_collections": [
+                            "persons"
+                        ],
+                        "to_vertex_collections": [
+                            "persons"
+                        ],
                     }
                 ],
             )
 
     def close(self) -> None:
-        pass  # python-arango uses per-request HTTP sessions; nothing to close explicitly
+        """
+        python-arango uses HTTP requests and does not
+        require an explicit persistent connection close.
+        """
+
+        self._db = None
+        self._client = None
 
     def clear(self) -> None:
-        self._db.collection("follows").truncate()
-        self._db.collection("persons").truncate()
+        db = self._require_db()
+
+        db.collection(
+            "follows"
+        ).truncate()
+
+        db.collection(
+            "persons"
+        ).truncate()
 
     def create_indexes(self) -> None:
-        self._db.collection("persons").add_persistent_index(fields=[self.indexed_property])
+        db = self._require_db()
 
-    def load_nodes(self, nodes: Iterable[NodeRecord], batch_size: int) -> int:
-        col = self._db.collection("persons")
+        collection = db.collection(
+            "persons"
+        )
+
+        try:
+            collection.add_persistent_index(
+                fields=[
+                    self.indexed_property
+                ],
+            )
+
+        except Exception:
+            # Most likely the index already exists.
+            pass
+
+    def load_nodes(
+        self,
+        nodes: Iterable[NodeRecord],
+        batch_size: int,
+    ) -> int:
+        db = self._require_db()
+
+        collection = db.collection(
+            "persons"
+        )
+
         batch: list[dict] = []
         total = 0
-        for n in nodes:
-            batch.append({"_key": n.node_id, "handle": n.props.get("handle", n.node_id)})
+
+        for node in nodes:
+            batch.append(
+                {
+                    "_key": node.node_id,
+                    "handle": node.props.get(
+                        "handle",
+                        node.node_id,
+                    ),
+                }
+            )
+
             if len(batch) >= batch_size:
-                col.insert_many(batch, overwrite=True)
+                collection.insert_many(
+                    batch,
+                    overwrite=True,
+                )
+
                 total += len(batch)
                 batch = []
+
         if batch:
-            col.insert_many(batch, overwrite=True)
+            collection.insert_many(
+                batch,
+                overwrite=True,
+            )
+
             total += len(batch)
+
         return total
 
-    def load_edges(self, edges: Iterable[EdgeRecord], batch_size: int) -> int:
-        col = self._db.collection("follows")
+    def load_edges(
+        self,
+        edges: Iterable[EdgeRecord],
+        batch_size: int,
+    ) -> int:
+        db = self._require_db()
+
+        collection = db.collection(
+            "follows"
+        )
+
         batch: list[dict] = []
         total = 0
-        for e in edges:
-            batch.append({"_from": f"persons/{e.src_id}", "_to": f"persons/{e.dst_id}"})
+
+        for edge in edges:
+            batch.append(
+                {
+                    "_from": (
+                        f"persons/{edge.src_id}"
+                    ),
+                    "_to": (
+                        f"persons/{edge.dst_id}"
+                    ),
+                }
+            )
+
             if len(batch) >= batch_size:
-                col.insert_many(batch, overwrite=True)
+                collection.insert_many(
+                    batch,
+                    overwrite=True,
+                )
+
                 total += len(batch)
                 batch = []
+
         if batch:
-            col.insert_many(batch, overwrite=True)
+            collection.insert_many(
+                batch,
+                overwrite=True,
+            )
+
             total += len(batch)
+
         return total
 
-    def traversal(self, start_id: str, hops: int) -> float:
+    def traversal(
+        self,
+        start_id: str,
+        hops: int,
+    ) -> float:
+        if hops <= 0:
+            raise ValueError(
+                "hops must be greater than zero."
+            )
+
+        db = self._require_db()
+
         aql = (
-            "FOR v IN @hops..@hops OUTBOUND @start GRAPH @g "
-            "COLLECT WITH COUNT INTO c RETURN c"
+            "FOR v IN @hops..@hops "
+            "OUTBOUND @start "
+            "GRAPH @graph "
+            "COLLECT WITH COUNT INTO count "
+            "RETURN count"
         )
+
         t0 = time.perf_counter()
-        cursor = self._db.aql.execute(
-            aql, bind_vars={"start": f"persons/{start_id}", "hops": hops, "g": self.GRAPH_NAME}
+
+        cursor = db.aql.execute(
+            aql,
+            bind_vars={
+                "start": (
+                    f"persons/{start_id}"
+                ),
+                "hops": hops,
+                "graph": self.GRAPH_NAME,
+            },
         )
+
         list(cursor)
-        return (time.perf_counter() - t0) * 1000
 
-    def point_lookup(self, node_id: str) -> float:
-        t0 = time.perf_counter()
-        self._db.collection("persons").get(node_id)
-        return (time.perf_counter() - t0) * 1000
+        return (
+            time.perf_counter() - t0
+        ) * 1000
 
-    def indexed_lookup(self, value: str) -> float:
-        aql = f"FOR p IN persons FILTER p.{self.indexed_property} == @v RETURN p"
+    def point_lookup(
+        self,
+        node_id: str,
+    ) -> float:
+        db = self._require_db()
+
         t0 = time.perf_counter()
-        list(self._db.aql.execute(aql, bind_vars={"v": value}))
-        return (time.perf_counter() - t0) * 1000
+
+        db.collection(
+            "persons"
+        ).get(node_id)
+
+        return (
+            time.perf_counter() - t0
+        ) * 1000
+
+    def indexed_lookup(
+        self,
+        value: str,
+    ) -> float:
+        db = self._require_db()
+
+        aql = (
+            "FOR p IN persons "
+            f"FILTER p.{self.indexed_property} == @value "
+            "RETURN p"
+        )
+
+        t0 = time.perf_counter()
+
+        list(
+            db.aql.execute(
+                aql,
+                bind_vars={
+                    "value": value,
+                },
+            )
+        )
+
+        return (
+            time.perf_counter() - t0
+        ) * 1000
 
     def aggregation(self) -> float:
-        aql = (
-            "FOR e IN follows COLLECT src = e._from WITH COUNT INTO out_degree "
-            "SORT out_degree DESC LIMIT 100 RETURN {src, out_degree}"
-        )
-        t0 = time.perf_counter()
-        list(self._db.aql.execute(aql))
-        return (time.perf_counter() - t0) * 1000
+        db = self._require_db()
 
-    def mixed_op(self, is_read: bool) -> float:
+        aql = """
+        FOR edge IN follows
+            COLLECT
+                source = edge._from
+                WITH COUNT INTO out_degree
+            SORT out_degree DESC
+            LIMIT 100
+            RETURN {
+                source: source,
+                out_degree: out_degree
+            }
+        """
+
         t0 = time.perf_counter()
+
+        list(
+            db.aql.execute(aql)
+        )
+
+        return (
+            time.perf_counter() - t0
+        ) * 1000
+
+    def mixed_op(
+        self,
+        is_read: bool,
+    ) -> float:
+        db = self._require_db()
+
+        t0 = time.perf_counter()
+
         if is_read:
-            rid = str(random.randint(0, 1_000_000))
-            self._db.collection("persons").get(rid)
-        else:
-            rid = f"mixed-{random.randint(0, 10_000_000)}"
-            self._db.collection("persons").insert(
-                {"_key": rid, "handle": rid, "mixed": True}, overwrite=True
+            node_id = str(
+                random.randint(
+                    0,
+                    75_878,
+                )
             )
-        return (time.perf_counter() - t0) * 1000
+
+            db.collection(
+                "persons"
+            ).get(node_id)
+
+        else:
+            node_id = (
+                f"mixed-"
+                f"{random.randint(0, 10_000_000)}"
+            )
+
+            db.collection(
+                "persons"
+            ).insert(
+                {
+                    "_key": node_id,
+                    "handle": node_id,
+                    "mixed": True,
+                },
+                overwrite=True,
+            )
+
+        return (
+            time.perf_counter() - t0
+        ) * 1000
 
     def footprint(self) -> dict:
         try:
-            stats = self._db.collection("persons").statistics()
+            db = self._require_db()
+
+            persons = db.collection(
+                "persons"
+            )
+
+            follows = db.collection(
+                "follows"
+            )
+
             return {
-                "node_count": self._db.collection("persons").count(),
-                "rel_count": self._db.collection("follows").count(),
-                "figures": stats.get("figures", "not observable"),
+                "node_count": persons.count(),
+                "rel_count": follows.count(),
             }
+
         except Exception as exc:
-            return {"error": str(exc), "note": "stats() unavailable on this deployment"}
+            return {
+                "error": str(exc),
+                "note": (
+                    "Collection statistics are not "
+                    "available for this deployment."
+                ),
+            }

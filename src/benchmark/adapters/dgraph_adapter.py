@@ -30,24 +30,52 @@ class DgraphAdapter(GraphDBAdapter):
         self._uid_cache: dict[str, str] = {}
 
     def connect(self) -> None:
-        self._stub = pydgraph.DgraphClientStub(self.addr)
-        self._client = pydgraph.DgraphClient(self._stub)
+        if self._client is not None:
+            return
+
+        self._stub = pydgraph.DgraphClientStub(
+            self.addr
+        )
+
+        self._client = pydgraph.DgraphClient(
+            self._stub
+        )
+
+        # Force an actual request to verify connectivity.
+        self._client.txn(
+            read_only=True
+        ).query(
+            "{ q(func: uid(0x1)) { uid } }"
+        )
 
     def close(self) -> None:
-        if self._stub:
+        if self._stub is not None:
             self._stub.close()
 
+        self._stub = None
+        self._client = None
+        self._uid_cache.clear()
+
     def clear(self) -> None:
-        self._client.alter(pydgraph.Operation(drop_all=True))
+        client = self._require_client()
+        client.alter(pydgraph.Operation(drop_all=True))
         self._uid_cache.clear()
 
     def create_indexes(self) -> None:
+        client = self._require_client()
+
         schema = f"""
         external_id: string @index(exact) .
         {self.indexed_property}: string @index(exact) .
         follows: [uid] @reverse .
+        mixed: bool .
         """
-        self._client.alter(pydgraph.Operation(schema=schema))
+
+        client.alter(
+            pydgraph.Operation(
+                schema=schema
+            )
+        )
 
     def load_nodes(self, nodes: Iterable[NodeRecord], batch_size: int) -> int:
         batch: list[dict] = []
@@ -60,6 +88,14 @@ class DgraphAdapter(GraphDBAdapter):
         if batch:
             total += self._flush_nodes(batch)
         return total
+    
+    def _require_client(self) -> pydgraph.DgraphClient:
+        if self._client is None:
+            raise RuntimeError(
+                "Dgraph is not connected. "
+                "Call connect() first."
+            )
+        return self._client
 
     def _flush_nodes(self, batch: list[dict]) -> int:
         txn = self._client.txn()
@@ -109,12 +145,46 @@ class DgraphAdapter(GraphDBAdapter):
             txn.discard()
         return len(batch)
 
-    def traversal(self, start_id: str, hops: int) -> float:
-        levels = "follows { " * hops + "uid" + " }" * hops
-        q = "query q($id: string) { start(func: eq(external_id, $id)) { " + levels + " } }"
+    def traversal(
+        self,
+        start_id: str,
+        hops: int,
+    ) -> float:
+        if hops <= 0:
+            raise ValueError(
+                "hops must be greater than zero."
+            )
+
+        client = self._require_client()
+
+        levels = (
+            "follows { " * hops
+            + "uid"
+            + " }" * hops
+        )
+
+        query = (
+            "query q($id: string) { "
+            "start(func: eq(external_id, $id)) { "
+            f"{levels}"
+            "} "
+            "}"
+        )
+
         t0 = time.perf_counter()
-        self._client.txn(read_only=True).query(q, variables={"$id": start_id})
-        return (time.perf_counter() - t0) * 1000
+
+        client.txn(
+            read_only=True
+        ).query(
+            query,
+            variables={
+                "$id": start_id,
+            },
+        )
+
+        return (
+            time.perf_counter() - t0
+        ) * 1000
 
     def point_lookup(self, node_id: str) -> float:
         q = "query q($id: string) { q(func: eq(external_id, $id)) { uid external_id handle } }"
@@ -153,11 +223,53 @@ class DgraphAdapter(GraphDBAdapter):
 
     def footprint(self) -> dict:
         try:
-            q = (
-                "{ n(func: has(external_id)) { count(uid) } "
-                "e(func: has(follows)) { c: count(follows) } }"
+            client = self._require_client()
+
+            query = """
+            {
+                nodes(func: has(external_id)) {
+                    total: count(uid)
+                }
+
+                edges(func: has(follows)) {
+                    total: count(follows)
+                }
+            }
+            """
+
+            response = client.txn(
+                read_only=True
+            ).query(query)
+
+            result = json.loads(
+                response.json
             )
-            res = json.loads(self._client.txn(read_only=True).query(q).json)
-            return {"raw": res, "note": "disk/memory size not exposed via the gRPC API"}
+
+            node_count = 0
+            edge_count = 0
+
+            for item in result.get("nodes", []):
+                node_count += item.get(
+                    "total",
+                    0,
+                )
+
+            for item in result.get("edges", []):
+                edge_count += item.get(
+                    "total",
+                    0,
+                )
+
+            return {
+                "node_count": node_count,
+                "rel_count": edge_count,
+                "note": (
+                    "Disk and memory size are not "
+                    "exposed through the Dgraph gRPC API."
+                ),
+            }
+
         except Exception as exc:
-            return {"error": str(exc)}
+            return {
+                "error": str(exc),
+            }
