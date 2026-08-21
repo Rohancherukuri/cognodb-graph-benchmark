@@ -3,12 +3,14 @@ from __future__ import annotations
 import os
 import random
 import time
+from dotenv import load_dotenv
 from typing import Any, Iterable, Optional, Protocol
 
 from surrealdb import RecordID, Surreal
 
 from .base import EdgeRecord, GraphDBAdapter, NodeRecord
 
+load_dotenv()  # for local development convenience; CI/CD should set env vars directly
 
 class _SurrealConnection(Protocol):
     """The subset of the `surrealdb` client's blocking-connection interface
@@ -59,20 +61,85 @@ class SurrealDBAdapter(GraphDBAdapter):
         self.namespace: str = os.environ.get("SURREALDB_NAMESPACE", "benchmark")
         self.database: str = os.environ.get("SURREALDB_DATABASE", "benchmark")
         self._db: Optional[_SurrealConnection] = None
+        self.auth_level = os.environ.get("SURREALDB_AUTH_LEVEL", "root").lower()  # SurrealDB Cloud only
+        self._loaded_node_ids: list[str] = []
+    
+    def _signin(self) -> None:
+        """Authenticate with SurrealDB based on the configured auth level."""
+
+        if self._db is None:
+            raise RuntimeError("SurrealDB connection has not been initialized.")
+
+        if self.auth_level == "root":
+            self._db.signin(
+                {
+                    "username": self.user,
+                    "password": self.password,
+                }
+            )
+
+        elif self.auth_level == "namespace":
+            self._db.signin(
+                {
+                    "namespace": self.namespace,
+                    "username": self.user,
+                    "password": self.password,
+                }
+            )
+
+        elif self.auth_level == "database":
+            self._db.signin(
+                {
+                    "namespace": self.namespace,
+                    "database": self.database,
+                    "username": self.user,
+                    "password": self.password,
+                }
+            )
+
+        else:
+            raise ValueError(
+                "Unsupported SURREALDB_AUTH_LEVEL: "
+                f"{self.auth_level!r}. "
+                "Expected one of: root, namespace, database."
+            )
 
     def connect(self) -> None:
+        """Connect and authenticate with SurrealDB."""
         self._db = Surreal(self.url)
-        self._db.signin({"username": self.user, "password": self.password})
-        self._db.use(self.namespace, self.database)
+
+        try:
+            self._signin()
+            self._db.use(
+                self.namespace,
+                self.database,
+            )
+
+        except Exception:
+            self.close()
+            raise
 
     def close(self) -> None:
+        """Close the SurrealDB connection."""
+
         if self._db is not None:
-            self._db.close()
+            try:
+                self._db.close()
+            finally:
+                self._db = None
 
     def clear(self) -> None:
         db = self._require_db()
-        db.query(f"DELETE {self.EDGE_TABLE};")
-        db.query(f"DELETE {self.TABLE};")
+
+        db.query(
+            f"DELETE {self.EDGE_TABLE};"
+        )
+
+        db.query(
+            f"DELETE {self.TABLE};"
+        )
+
+        self._loaded_node_ids = []
 
     def create_indexes(self) -> None:
         db = self._require_db()
@@ -88,16 +155,39 @@ class SurrealDBAdapter(GraphDBAdapter):
             f"ON TABLE {self.TABLE} COLUMNS {self.indexed_property};"
         )
 
-    def load_nodes(self, nodes: Iterable[NodeRecord], batch_size: int) -> int:
+    def load_nodes(
+            self,
+            nodes: Iterable[NodeRecord],
+            batch_size: int,
+        ) -> int:
         batch: list[dict[str, Any]] = []
         total = 0
-        for n in nodes:
-            batch.append({"id": n.node_id, "handle": n.props.get("handle", n.node_id)})
+
+        # Reset node tracking for each new dataset load.
+        self._loaded_node_ids = []
+
+        for node in nodes:
+            node_id = str(node.node_id)
+
+            self._loaded_node_ids.append(node_id)
+
+            batch.append(
+                {
+                    "id": node_id,
+                    "handle": node.props.get(
+                        "handle",
+                        node_id,
+                    ),
+                }
+            )
+
             if len(batch) >= batch_size:
                 total += self._flush_nodes(batch)
                 batch = []
+
         if batch:
             total += self._flush_nodes(batch)
+
         return total
 
     def _flush_nodes(self, batch: list[dict[str, Any]]) -> int:
@@ -106,8 +196,11 @@ class SurrealDBAdapter(GraphDBAdapter):
         # batch's success/failure IS correctly surfaced by `.query()`.
         query = (
             f"FOR $row IN $rows {{ "
-            f"UPDATE type::thing('{self.TABLE}', $row.id) "
-            f"CONTENT {{ handle: $row.handle }}; "
+            f"UPSERT type::thing('{self.TABLE}', $row.id) "
+            f"CONTENT {{ "
+            f"id: $row.id, "
+            f"handle: $row.handle "
+            f"}}; "
             f"}};"
         )
         db.query(query, {"rows": batch})
@@ -170,18 +263,38 @@ class SurrealDBAdapter(GraphDBAdapter):
 
     def mixed_op(self, is_read: bool) -> float:
         db = self._require_db()
+
+        if not self._loaded_node_ids:
+            raise RuntimeError(
+                "No benchmark nodes are available for the mixed workload."
+            )
+
+        node_id = random.choice(
+            self._loaded_node_ids
+        )
+
         t0 = time.perf_counter()
+
         if is_read:
-            rid = str(random.randint(0, 1_000_000))
-            db.select(RecordID(self.TABLE, rid))
+            db.select(
+                RecordID(
+                    self.TABLE,
+                    node_id,
+                )
+            )
+
         else:
-            rid = f"mixed-{random.randint(0, 10_000_000)}"
             db.query(
                 f"UPDATE type::thing('{self.TABLE}', $id) "
-                f"CONTENT {{ handle: $id, mixed: true }};",
-                {"id": rid},
+                f"SET mixed = true;",
+                {
+                    "id": node_id,
+                },
             )
-        return (time.perf_counter() - t0) * 1000
+
+        return (
+            time.perf_counter() - t0
+        ) * 1000
 
     def footprint(self) -> dict[str, Any]:
         db = self._require_db()

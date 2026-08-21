@@ -544,8 +544,6 @@ dependencies = [
     { name = "networkx" },
     { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
     { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
-    { name = "protobuf" },
-    { name = "pydgraph" },
     { name = "pytest" },
     { name = "python-arango" },
     { name = "python-dotenv" },
@@ -564,8 +562,6 @@ requires-dist = [
     { name = "neo4j", specifier = ">=5.22.0" },
     { name = "networkx", specifier = ">=3.3" },
     { name = "numpy", specifier = ">=1.26.0" },
-    { name = "protobuf", specifier = ">=4.23.0,<5.0.0" },
-    { name = "pydgraph", specifier = "==24.3.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "python-arango", specifier = ">=8.1.0" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
@@ -1895,19 +1891,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ac/ad/5565071e937d8e752842ac241463944c9eb14c87e2d269f2658a5bd05e98/pydantic_core-2.46.4-pp311-pypy311_pp73-musllinux_1_1_armv7l.whl", hash = "sha256:d396ec2b979760aaf3218e76c24e65bd0aca24983298653b3a9d7a45f9e47b30", size = 2310000, upload-time = "2026-05-06T13:37:56.694Z" },
     { url = "https://files.pythonhosted.org/packages/4f/c3/66883a5cec183e7fba4d024b4cbbe61851a63750ef606b0afecc46d1f2bf/pydantic_core-2.46.4-pp311-pypy311_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:86e1a4418c6cd97d60c95c71164158eaf7324fae7b0923264016baa993eba6fc", size = 2361286, upload-time = "2026-05-06T13:40:05.667Z" },
     { url = "https://files.pythonhosted.org/packages/4b/2d/69abac8f838090bbecd5df894befb2c2619e7996a98ddb949db9f3b93225/pydantic_core-2.46.4-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:d51026d73fcfd93610abc7b27789c26b313920fcfb20e27462d74a7f8b06e983", size = 2193071, upload-time = "2026-05-06T13:38:08.682Z" },
-]
-
-[[package]]
-name = "pydgraph"
-version = "24.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "grpcio" },
-    { name = "protobuf" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/99/3f/cc4236257e616fa3394c53f75650a3e7145cc95472f6d811604e3a662411/pydgraph-24.3.0.tar.gz", hash = "sha256:1f42541cd542c379b5048695e55b847614367bdfb7774cd0198e9d61b0455af4", size = 47428, upload-time = "2025-08-05T00:50:19.067Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/49/6d/efab9acf2d72ed139e609579627334ba073a7647c17b9f3ff0a09acfa608/pydgraph-24.3.0-py3-none-any.whl", hash = "sha256:770ea703301dcce5e92eda94a8fc1bec17d53de4232bfdd78089a87ad32aa975", size = 30511, upload-time = "2025-08-05T00:50:17.821Z" },
 ]
 
 [[package]]

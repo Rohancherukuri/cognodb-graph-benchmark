@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 
 import pytest
@@ -19,7 +21,7 @@ def test_memgraph_create_and_read_node() -> None:
 
         db = adapter._require_db()
 
-        list(
+        created = list(
             db.execute_and_fetch(
                 """
                 CREATE (
@@ -27,7 +29,6 @@ def test_memgraph_create_and_read_node() -> None:
                         id: $id
                     }
                 )
-
                 RETURN n.id AS id
                 """,
                 parameters={
@@ -35,6 +36,9 @@ def test_memgraph_create_and_read_node() -> None:
                 },
             )
         )
+
+        assert len(created) == 1
+        assert created[0]["id"] == test_id
 
         results = list(
             db.execute_and_fetch(
@@ -44,7 +48,6 @@ def test_memgraph_create_and_read_node() -> None:
                         id: $id
                     }
                 )
-
                 RETURN n.id AS id
                 """,
                 parameters={
@@ -67,13 +70,14 @@ def test_memgraph_create_and_read_node() -> None:
                                 id: $id
                             }
                         )
-
                         DELETE n
+                        RETURN count(*) AS deleted_count
                         """,
                         parameters={
                             "id": test_id,
                         },
                     )
                 )
+
         finally:
             adapter.close()

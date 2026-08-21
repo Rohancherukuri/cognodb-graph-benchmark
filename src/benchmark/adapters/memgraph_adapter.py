@@ -106,10 +106,6 @@ class MemgraphAdapter(GraphDBAdapter):
         return self._db
 
     def _execute(self, query: str, **params) -> None:
-        """
-        Execute a query and fully consume the result.
-        """
-
         db = self._require_db()
 
         list(
@@ -118,7 +114,7 @@ class MemgraphAdapter(GraphDBAdapter):
                 parameters=params or None,
             )
         )
-
+        
     def clear(self) -> None:
         self._execute(
             "MATCH (n) DETACH DELETE n"

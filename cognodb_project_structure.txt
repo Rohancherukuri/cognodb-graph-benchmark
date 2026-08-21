@@ -57,7 +57,7 @@
 │   │   └── 🐍 test_real_dataset.py
 │   ├── 📁 fakes
 │   │   └── 🐍 fake_adapter.py
-│   ├── 📁 integration
+│   ├── 📁 integrations
 │   │   ├── 🐍 __init__.py
 │   │   ├── 🐍 test_arangodb_integration.py
 │   │   ├── 🐍 test_cognodb_integration.py

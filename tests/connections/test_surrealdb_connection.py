@@ -42,13 +42,20 @@ def test_reads_custom_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     assert adapter.database == "mydb"
 
 
-def test_url_should_not_include_rpc_suffix() -> None:
-    """Regression guard: the `surrealdb` client's connection classes build
-    `raw_url = f"{url}/rpc"` themselves - a default that already ends in
-    `/rpc` would silently double up and fail to connect.
-    """
+def test_cloud_url_with_rpc_suffix_is_preserved(monkeypatch: pytest.MonkeyPatch) -> None:
+    cloud_url = (
+        "wss://testing-06aqpjfb9tqqp4693apn2mrdcg.aws-use1."
+        "surreal.cloud/rpc"
+    )
+
+    monkeypatch.setenv(
+        "SURREALDB_URL",
+        cloud_url,
+    )
+
     adapter = SurrealDBAdapter()
-    assert not adapter.url.endswith("/rpc")
+
+    assert adapter.url == cloud_url
 
 
 def test_close_before_connect_does_not_raise() -> None:
