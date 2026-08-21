@@ -32,7 +32,7 @@ just the command sequence.
                                              creation - save it immediately)
     NEO4J_AURA_URI, NEO4J_AURA_PASSWORD    (from the Neo4j Aura console)
 
-  Leave the MEMGRAPH_*, ARANGODB_*, DGRAPH_* values as-is; they already
+  Leave the MEMGRAPH_*, ARANGODB_*, SURREALDB_* values as-is; they already
   point at the docker-compose services started in step 2.
 
 
@@ -40,9 +40,9 @@ just the command sequence.
 -----------------------------------------------
   make infra-up
   (equivalent to: bash scripts/start_infra.sh
-   equivalent to: docker compose up -d memgraph arangodb dgraph)
+   equivalent to: docker compose up -d memgraph arangodb surrealdb)
 
-  This starts Memgraph, ArangoDB, and Dgraph in Docker, each capped to
+  This starts Memgraph, ArangoDB, and SurrealDB in Docker, each capped to
   0.5 vCPU / 256 MB RAM to match CognoDB's free-tier resource envelope.
   Give it ~10 seconds to finish initializing before running the benchmark.
 
@@ -97,7 +97,7 @@ just the command sequence.
   (equivalent to: bash scripts/stop_infra.sh
    equivalent to: docker compose down)
 
-  Stops and removes the Memgraph / ArangoDB / Dgraph containers. Data
+  Stops and removes the Memgraph / ArangoDB / SurrealDB containers. Data
   inside them is not preserved - that's intentional, so the next run
   starts from a clean, comparable state.
 
@@ -128,13 +128,28 @@ just the command sequence.
   fake adapter - no live database credentials required. This is also
   what CI runs on every push (.github/workflows/ci.yml).
 
+  Tests that hit a real database (tests/connections, tests/queries,
+  tests/integration) are marked `live` and skipped by default - pytest.ini
+  excludes them via `addopts = "-m 'not live and not network'"`. Run them
+  explicitly once the relevant infra/credentials are available:
+
+    make infra-up                    # for e.g. SurrealDB
+    pytest -m live                   # every live-gated test
+    pytest -m live tests/connections/test_surrealdb_connection.py
+    pytest -m live tests/queries/test_surrealdb_queries.py
+    pytest -m live tests/integration/test_surrealdb_integration.py
+
+  Each live test is individually gated on the env var(s) it needs (see
+  tests/conftest.py:requires_env) - missing credentials produce a clean
+  SKIP with a reason, not a failure.
+
 
 TROUBLESHOOTING
 ------------------
 - "dataset not found" when running `benchmark bench run`
     -> run `make dataset` first.
 
-- Connection refused to memgraph/arangodb/dgraph
+- Connection refused to memgraph/arangodb/surrealdb
     -> `make infra-up` and wait a few seconds; check `docker compose ps`
        and `docker compose logs <service>`.
 
@@ -143,6 +158,6 @@ TROUBLESHOOTING
        platforms show the password only once at instance creation, so a
        lost password means recreating the instance.
 
-- Port already in use (7688 / 8529 / 8080 / 9080)
+- Port already in use (7688 / 8529 / 8000)
     -> another process (maybe a previous run) is using that port; stop it
        or edit the port mapping in docker-compose.yml.

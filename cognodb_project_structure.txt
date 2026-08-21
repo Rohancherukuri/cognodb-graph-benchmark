@@ -1,5 +1,6 @@
 # cognodb-graph-benchmark
 
+
 ```
 ├── 📁 .github
 │   └── 📁 workflows
@@ -43,22 +44,39 @@
 │       ├── 🐍 config.py
 │       └── 🐍 orchestrator.py
 ├── 📁 tests
+│   ├── 📁 connections
+│   │   ├── 🐍 test_arangodb_connection.py
+│   │   ├── 🐍 test_cognodb_connection.py
+│   │   ├── 🐍 test_dgraph_connection.py
+│   │   ├── 🐍 test_memgrah_connection.py
+│   │   └── 🐍 test_neo4j_connection.py
 │   ├── 📁 dataset
 │   │   ├── 🐍 __init__.py
 │   │   ├── 🐍 test_load_dataset.py
 │   │   ├── 🐍 test_prepare.py
 │   │   └── 🐍 test_real_dataset.py
+│   ├── 📁 fakes
+│   │   └── 🐍 fake_adapter.py
 │   ├── 📁 integration
 │   │   ├── 🐍 __init__.py
-│   │   └── 🐍 test_cognodb_integration.py
+│   │   ├── 🐍 test_arangodb_integration.py
+│   │   ├── 🐍 test_cognodb_integration.py
+│   │   ├── 🐍 test_dgraph_integration.py
+│   │   ├── 🐍 test_memgraph_integration.py
+│   │   └── 🐍 test_neo4j_integration.py
+│   ├── 📁 queries
+│   │   ├── 🐍 test_arangodb_queries.py
+│   │   ├── 🐍 test_cognodb_queries.py
+│   │   ├── 🐍 test_dgraph_queries.py
+│   │   ├── 🐍 test_memgraph_queries.py
+│   │   └── 🐍 test_neo4j_queries.py
+│   ├── 📁 unit
+│   │   ├── 🐍 test_orchestrator.py
+│   │   ├── 🐍 test_report.py
+│   │   └── 🐍 test_stats.py
 │   ├── 🐍 __init__.py
-│   ├── 🐍 conftest.py
-│   ├── 🐍 fake_adapter.py
-│   ├── 🐍 test_cognodb_connection.py
-│   ├── 🐍 test_cognodb_queries.py
-│   ├── 🐍 test_orchestrator.py
-│   ├── 🐍 test_report.py
-│   └── 🐍 test_stats.py
+│   └── 🐍 conftest.py
+├── ⚙️ .dockerignore
 ├── ⚙️ .env.example
 ├── ⚙️ .gitignore
 ├── 🐳 Dockerfile

@@ -2,7 +2,7 @@
 # specs (0.5 vCPU / 256MB RAM / 1GB disk) so no platform gets a hardware
 # advantage - see config/platforms.yaml and README "Fairness" section.
 #
-#   docker compose up -d memgraph arangodb dgraph      # start comparison DBs
+#   docker compose up -d memgraph arangodb surrealdb    # start comparison DBs
 #   docker compose down                                # stop + remove them
 #   docker compose --profile runner run --rm benchmark <cli args>
 #       # run the harness itself inside a container instead of locally
@@ -27,12 +27,15 @@ services:
     cpus: 0.5
     mem_limit: 256m
 
-  dgraph:
-    image: dgraph/standalone:v24.0.0
-    container_name: bench-dgraph
+  surrealdb:
+    image: surrealdb/surrealdb:v2.1
+    container_name: bench-surrealdb
+    # In-memory backend: fastest to start, and matches the "fresh state
+    # every run" pattern used for the other self-hosted platforms (no
+    # volume, so `docker compose down` fully resets it).
+    command: ["start", "--user", "root", "--pass", "root", "--bind", "0.0.0.0:8000", "memory"]
     ports:
-      - "8080:8080"
-      - "9080:9080"
+      - "8000:8000"
     cpus: 0.5
     mem_limit: 256m
 
@@ -50,5 +53,5 @@ services:
     depends_on:
       - memgraph
       - arangodb
-      - dgraph
+      - surrealdb
     profiles: ["runner"]

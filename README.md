@@ -19,7 +19,7 @@ identical data, identical logical queries, and matched hardware limits.
 | **Neo4j AuraDB Free** | CognoDB's own setup instructions point at the official Neo4j Bolt driver — Aura is the most direct, apples-to-apples comparison since both are exercised through identical Cypher queries over the identical driver. |
 | **Memgraph** | Also Bolt/Cypher-compatible, but a different storage/execution engine (in-memory, C++ core). Self-hosted so it can be pinned to *exactly* CognoDB's free-tier resource envelope via Docker, rather than trusting a third-party free tier's actual allocation. |
 | **ArangoDB** | A genuinely different data model (multi-model, AQL) and query planner, self-hosted with the same resource cap. |
-| **Dgraph** | Native GraphQL-shaped storage, gRPC protocol (vs. Bolt/HTTP), self-hosted with the same resource cap. |
+| **SurrealDB** | A genuinely different storage model again (multi-model, native record-graph edges via `RELATE`), queried in SurrealQL over a WebSocket RPC protocol (vs. Bolt/HTTP), self-hosted with the same resource cap. |
 
 Two managed free tiers + three resource-capped self-hosted platforms keeps
 the comparison genuinely apples-to-apples: every self-hosted platform gets
@@ -35,7 +35,7 @@ to each other via the same driver and query language.
 | Neo4j AuraDB | 0.5 | 256 MB | 1 GB | AuraDB Free — verify against your instance in the console and correct `config/platforms.yaml` if it differs |
 | Memgraph | 0.5 | 256 MB | 1 GB | `docker-compose.yml`: `cpus: 0.5`, `mem_limit: 256m` |
 | ArangoDB | 0.5 | 256 MB | 1 GB | `docker-compose.yml`: `cpus: 0.5`, `mem_limit: 256m` |
-| Dgraph | 0.5 | 256 MB | 1 GB | `docker-compose.yml`: `cpus: 0.5`, `mem_limit: 256m` |
+| SurrealDB | 0.5 | 256 MB | 1 GB | `docker-compose.yml`: `cpus: 0.5`, `mem_limit: 256m` |
 
 See `docs/METHODOLOGY.md` for the full rationale and how every rule in the
 assignment brief maps to code.
@@ -122,7 +122,7 @@ Or run everything containerized instead — see `docker-compose.yml`
 ## Running the benchmark
 
 ```bash
-make infra-up        # start Memgraph / ArangoDB / Dgraph (docker compose)
+make infra-up        # start Memgraph / ArangoDB / SurrealDB (docker compose)
 make dataset         # download+sample SNAP, or synthetic if offline
 make bench           # run all 5 platforms through every workload
 make report          # build results/REPORT.md from results/*.json

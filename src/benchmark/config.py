@@ -14,7 +14,7 @@ DEFAULT_SPECS = {
     "neo4j_aura": {"vcpu": 0.5, "ram_mb": 256, "disk_gb": 1, "tier": "Neo4j AuraDB Free"},
     "memgraph": {"vcpu": 0.5, "ram_mb": 256, "disk_gb": 1, "tier": "self-hosted, docker-capped"},
     "arangodb": {"vcpu": 0.5, "ram_mb": 256, "disk_gb": 1, "tier": "self-hosted, docker-capped"},
-    "dgraph": {"vcpu": 0.5, "ram_mb": 256, "disk_gb": 1, "tier": "self-hosted, docker-capped"},
+    "surrealdb": {"vcpu": 0.5, "ram_mb": 256, "disk_gb": 1, "tier": "self-hosted, docker-capped"}
 }
 
 
