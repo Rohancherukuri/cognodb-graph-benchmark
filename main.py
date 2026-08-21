@@ -1,5 +1,11 @@
+from __future__ import annotations
+
+from .cli import cli
+
+
 def main() -> None:
-    print("Hello from cognodb-graph-benchmark!")
+    """Application entry point."""
+    cli()
 
 
 if __name__ == "__main__":

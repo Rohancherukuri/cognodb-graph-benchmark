@@ -12,7 +12,7 @@ disk. Every other platform is held to the same envelope:
 |---|---|
 | CognoDB Cloud | Free tier (c0), as provisioned. |
 | Neo4j AuraDB | Free tier, which ships at the same order-of-magnitude spec (shared vCPU, small RAM). Exact instance specs are pulled from the Aura console and recorded in `results/*.json` / the README results table. |
-| Memgraph, ArangoDB, Dgraph | Self-hosted via `docker-compose.yml`, each container capped with `cpus: 0.5` and `mem_limit: 256m` — Docker enforces this at the cgroup level, so it isn't just advisory. |
+| Memgraph, ArangoDB, SurrealDB | Self-hosted via `docker-compose.yml`, each container capped with `cpus: 0.5` and `mem_limit: 256m` — Docker enforces this at the cgroup level, so it isn't just advisory. |
 
 The assignment explicitly allows this: *"Free tiers, free trials or
 self-hosted deployments capped to the same resources are all fine."*
@@ -61,7 +61,6 @@ than guessed.
 ## What still requires a human judgment call
 
 - **Dataset choice**: `dataset prepare --source snap` samples SNAP
-  soc-Pokec by default; swap in a different public dataset by adding a new
   `dataset/*.py` loader that emits the same `nodes.csv`/`edges.csv` shape.
 - **Cold vs. warm numbers**: the harness reports warm numbers by design
   (warm-up pass before measurement). If you want cold-start numbers too,

@@ -5,7 +5,7 @@ from benchmark.adapters import registry
 from benchmark.config import BenchmarkConfig
 from benchmark.orchestrator import run_platform
 
-from .fake_adapter import FakeAdapter
+from tests.fakes.fake_adapter import FakeAdapter
 
 
 def _write_csv_dataset(tmp_path: Path):

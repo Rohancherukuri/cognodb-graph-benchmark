@@ -5,7 +5,7 @@ enabled_platforms:
   - neo4j_aura
   - memgraph
   - arangodb
-  - dgraph
+  - surrealdb
 
 iterations: 100          # read-workload iterations, per section 5.2 (>=100 suggested)
 concurrency_levels: [1, 10, 40]
@@ -39,7 +39,7 @@ platform_specs:
     ram_mb: 256
     disk_gb: 1
     tier: "self-hosted, docker cpus=0.5 mem_limit=256m"
-  dgraph:
+  surrealdb:
     vcpu: 0.5
     ram_mb: 256
     disk_gb: 1

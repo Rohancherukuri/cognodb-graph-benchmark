@@ -1,0 +1,594 @@
+{
+  "benchmark": {
+    "name": "cognodb-graph-benchmark",
+    "dataset": "SNAP soc-Epinions1",
+    "dataset_configuration": {
+      "raw_relationship_count": 508837,
+      "sampled_relationship_count": 100000,
+      "node_count": 35854,
+      "relationship_type": "TRUSTS",
+      "sampling_method": "deterministic random sampling",
+      "seed": 42
+    },
+    "benchmark_configuration": {
+      "load_batch_size": 1000,
+      "traversal_iterations": 5,
+      "lookup_iterations": 5,
+      "aggregation_iterations": 5,
+      "mixed_workload_duration_seconds": 2
+    },
+    "results_are": "estimated",
+    "warning": "The values in this file are predictions intended for development, visualization, and documentation. Replace them with actual measurements after the benchmark completes."
+  },
+  "platforms": {
+    "cognodb": {
+      "platform": "cognodb",
+      "status": "estimated",
+      "specs": {
+        "vcpu": 0.5,
+        "ram_mb": 256,
+        "disk_gb": 1,
+        "tier": "self-hosted, docker-capped"
+      },
+      "ingest": {
+        "nodes_loaded": 35854,
+        "rels_loaded": 100000,
+        "wall_clock_seconds": 420.5,
+        "nodes_per_second": 85.26,
+        "rels_per_second": 237.81
+      },
+      "traversal": {
+        "1hop": {
+          "count": 5,
+          "p50_ms": 14.2,
+          "p95_ms": 22.8,
+          "p99_ms": 27.1,
+          "mean_ms": 15.8,
+          "min_ms": 11.6,
+          "max_ms": 28.4
+        },
+        "2hop": {
+          "count": 5,
+          "p50_ms": 31.5,
+          "p95_ms": 48.7,
+          "p99_ms": 56.2,
+          "mean_ms": 34.9,
+          "min_ms": 27.8,
+          "max_ms": 58.3
+        },
+        "3hop": {
+          "count": 5,
+          "p50_ms": 76.4,
+          "p95_ms": 118.5,
+          "p99_ms": 134.7,
+          "mean_ms": 82.6,
+          "min_ms": 68.1,
+          "max_ms": 139.2
+        }
+      },
+      "point_lookup": {
+        "count": 5,
+        "p50_ms": 4.8,
+        "p95_ms": 7.2,
+        "p99_ms": 8.1,
+        "mean_ms": 5.3,
+        "min_ms": 4.1,
+        "max_ms": 8.4
+      },
+      "indexed_lookup": {
+        "count": 5,
+        "p50_ms": 3.6,
+        "p95_ms": 5.1,
+        "p99_ms": 5.8,
+        "mean_ms": 3.9,
+        "min_ms": 3.1,
+        "max_ms": 6.0
+      },
+      "indexed_property": "handle",
+      "aggregation": {
+        "count": 5,
+        "p50_ms": 18.7,
+        "p95_ms": 29.4,
+        "p99_ms": 34.8,
+        "mean_ms": 20.9,
+        "min_ms": 16.9,
+        "max_ms": 36.1
+      },
+      "mixed": [
+        {
+          "concurrency": 1,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 620,
+          "qps": 310.0
+        },
+        {
+          "concurrency": 5,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 2240,
+          "qps": 1120.0
+        },
+        {
+          "concurrency": 10,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 3760,
+          "qps": 1880.0
+        }
+      ],
+      "footprint": {
+        "node_count": 35854,
+        "rel_count": 100000
+      },
+      "caveats": [
+        "Estimated values only.",
+        "Observed ingestion may vary significantly depending on CognoDB server limits.",
+        "Network and Docker resource allocation can affect results."
+      ]
+    },
+    "neo4j_aura": {
+      "platform": "neo4j_aura",
+      "status": "estimated",
+      "specs": {
+        "vcpu": "managed",
+        "ram_mb": "managed",
+        "disk_gb": "managed",
+        "tier": "Neo4j Aura"
+      },
+      "ingest": {
+        "nodes_loaded": 35854,
+        "rels_loaded": 100000,
+        "wall_clock_seconds": 145.8,
+        "nodes_per_second": 245.91,
+        "rels_per_second": 685.87
+      },
+      "traversal": {
+        "1hop": {
+          "count": 5,
+          "p50_ms": 7.4,
+          "p95_ms": 12.1,
+          "p99_ms": 14.3,
+          "mean_ms": 8.2,
+          "min_ms": 6.3,
+          "max_ms": 14.8
+        },
+        "2hop": {
+          "count": 5,
+          "p50_ms": 18.6,
+          "p95_ms": 31.2,
+          "p99_ms": 37.8,
+          "mean_ms": 21.4,
+          "min_ms": 15.9,
+          "max_ms": 39.1
+        },
+        "3hop": {
+          "count": 5,
+          "p50_ms": 49.3,
+          "p95_ms": 82.7,
+          "p99_ms": 96.4,
+          "mean_ms": 55.8,
+          "min_ms": 43.5,
+          "max_ms": 101.2
+        }
+      },
+      "point_lookup": {
+        "count": 5,
+        "p50_ms": 2.8,
+        "p95_ms": 4.5,
+        "p99_ms": 5.2,
+        "mean_ms": 3.2,
+        "min_ms": 2.4,
+        "max_ms": 5.4
+      },
+      "indexed_lookup": {
+        "count": 5,
+        "p50_ms": 1.9,
+        "p95_ms": 3.1,
+        "p99_ms": 3.7,
+        "mean_ms": 2.2,
+        "min_ms": 1.6,
+        "max_ms": 3.9
+      },
+      "indexed_property": "handle",
+      "aggregation": {
+        "count": 5,
+        "p50_ms": 10.6,
+        "p95_ms": 17.8,
+        "p99_ms": 21.2,
+        "mean_ms": 11.9,
+        "min_ms": 9.4,
+        "max_ms": 22.1
+      },
+      "mixed": [
+        {
+          "concurrency": 1,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 900,
+          "qps": 450.0
+        },
+        {
+          "concurrency": 5,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 3400,
+          "qps": 1700.0
+        },
+        {
+          "concurrency": 10,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 5800,
+          "qps": 2900.0
+        }
+      ],
+      "footprint": {
+        "node_count": 35854,
+        "rel_count": 100000
+      },
+      "caveats": [
+        "Estimated values only.",
+        "Cloud network latency can materially affect measurements.",
+        "Aura tier configuration affects performance."
+      ]
+    },
+    "memgraph": {
+      "platform": "memgraph",
+      "status": "estimated",
+      "specs": {
+        "vcpu": 0.5,
+        "ram_mb": 256,
+        "disk_gb": 1,
+        "tier": "self-hosted, docker-capped"
+      },
+      "ingest": {
+        "nodes_loaded": 35854,
+        "rels_loaded": 100000,
+        "wall_clock_seconds": 92.4,
+        "nodes_per_second": 388.03,
+        "rels_per_second": 1082.25
+      },
+      "traversal": {
+        "1hop": {
+          "count": 5,
+          "p50_ms": 5.6,
+          "p95_ms": 8.7,
+          "p99_ms": 10.2,
+          "mean_ms": 6.1,
+          "min_ms": 4.9,
+          "max_ms": 10.6
+        },
+        "2hop": {
+          "count": 5,
+          "p50_ms": 13.9,
+          "p95_ms": 22.1,
+          "p99_ms": 27.4,
+          "mean_ms": 15.8,
+          "min_ms": 11.7,
+          "max_ms": 28.6
+        },
+        "3hop": {
+          "count": 5,
+          "p50_ms": 34.8,
+          "p95_ms": 56.9,
+          "p99_ms": 68.3,
+          "mean_ms": 39.7,
+          "min_ms": 30.6,
+          "max_ms": 70.4
+        }
+      },
+      "point_lookup": {
+        "count": 5,
+        "p50_ms": 1.8,
+        "p95_ms": 3.0,
+        "p99_ms": 3.5,
+        "mean_ms": 2.1,
+        "min_ms": 1.5,
+        "max_ms": 3.7
+      },
+      "indexed_lookup": {
+        "count": 5,
+        "p50_ms": 1.2,
+        "p95_ms": 2.1,
+        "p99_ms": 2.5,
+        "mean_ms": 1.5,
+        "min_ms": 1.0,
+        "max_ms": 2.6
+      },
+      "indexed_property": "handle",
+      "aggregation": {
+        "count": 5,
+        "p50_ms": 7.8,
+        "p95_ms": 12.9,
+        "p99_ms": 15.3,
+        "mean_ms": 8.9,
+        "min_ms": 7.0,
+        "max_ms": 15.9
+      },
+      "mixed": [
+        {
+          "concurrency": 1,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 1150,
+          "qps": 575.0
+        },
+        {
+          "concurrency": 5,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 4700,
+          "qps": 2350.0
+        },
+        {
+          "concurrency": 10,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 8200,
+          "qps": 4100.0
+        }
+      ],
+      "footprint": {
+        "node_count": 35854,
+        "rel_count": 100000
+      },
+      "caveats": [
+        "Estimated values only.",
+        "In-memory architecture can provide strong graph traversal performance.",
+        "Results depend heavily on available memory."
+      ]
+    },
+    "arangodb": {
+      "platform": "arangodb",
+      "status": "estimated",
+      "specs": {
+        "vcpu": 0.5,
+        "ram_mb": 256,
+        "disk_gb": 1,
+        "tier": "self-hosted, docker-capped"
+      },
+      "ingest": {
+        "nodes_loaded": 35854,
+        "rels_loaded": 100000,
+        "wall_clock_seconds": 188.6,
+        "nodes_per_second": 190.11,
+        "rels_per_second": 530.22
+      },
+      "traversal": {
+        "1hop": {
+          "count": 5,
+          "p50_ms": 9.1,
+          "p95_ms": 15.6,
+          "p99_ms": 18.2,
+          "mean_ms": 10.4,
+          "min_ms": 7.8,
+          "max_ms": 18.9
+        },
+        "2hop": {
+          "count": 5,
+          "p50_ms": 24.5,
+          "p95_ms": 41.7,
+          "p99_ms": 49.8,
+          "mean_ms": 27.6,
+          "min_ms": 21.1,
+          "max_ms": 51.4
+        },
+        "3hop": {
+          "count": 5,
+          "p50_ms": 61.7,
+          "p95_ms": 102.4,
+          "p99_ms": 121.6,
+          "mean_ms": 69.9,
+          "min_ms": 54.8,
+          "max_ms": 125.2
+        }
+      },
+      "point_lookup": {
+        "count": 5,
+        "p50_ms": 3.1,
+        "p95_ms": 5.0,
+        "p99_ms": 6.1,
+        "mean_ms": 3.5,
+        "min_ms": 2.7,
+        "max_ms": 6.4
+      },
+      "indexed_lookup": {
+        "count": 5,
+        "p50_ms": 2.3,
+        "p95_ms": 3.9,
+        "p99_ms": 4.6,
+        "mean_ms": 2.7,
+        "min_ms": 2.0,
+        "max_ms": 4.8
+      },
+      "indexed_property": "handle",
+      "aggregation": {
+        "count": 5,
+        "p50_ms": 12.8,
+        "p95_ms": 21.4,
+        "p99_ms": 25.6,
+        "mean_ms": 14.7,
+        "min_ms": 11.5,
+        "max_ms": 26.2
+      },
+      "mixed": [
+        {
+          "concurrency": 1,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 750,
+          "qps": 375.0
+        },
+        {
+          "concurrency": 5,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 2800,
+          "qps": 1400.0
+        },
+        {
+          "concurrency": 10,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 4700,
+          "qps": 2350.0
+        }
+      ],
+      "footprint": {
+        "node_count": 35854,
+        "rel_count": 100000
+      },
+      "caveats": [
+        "Estimated values only.",
+        "ArangoDB supports multiple data models, which may add overhead compared with specialized graph engines."
+      ]
+    },
+    "surrealdb": {
+      "platform": "surrealdb",
+      "status": "estimated",
+      "specs": {
+        "vcpu": "cloud-managed",
+        "ram_mb": "cloud-managed",
+        "disk_gb": "cloud-managed",
+        "tier": "SurrealDB Cloud"
+      },
+      "ingest": {
+        "nodes_loaded": 35854,
+        "rels_loaded": 100000,
+        "wall_clock_seconds": 680.4,
+        "nodes_per_second": 52.69,
+        "rels_per_second": 146.97
+      },
+      "traversal": {
+        "1hop": {
+          "count": 5,
+          "p50_ms": 245.6,
+          "p95_ms": 310.2,
+          "p99_ms": 342.7,
+          "mean_ms": 259.8,
+          "min_ms": 221.4,
+          "max_ms": 348.9
+        },
+        "2hop": {
+          "count": 5,
+          "p50_ms": 318.9,
+          "p95_ms": 402.6,
+          "p99_ms": 448.3,
+          "mean_ms": 337.4,
+          "min_ms": 291.7,
+          "max_ms": 456.1
+        },
+        "3hop": {
+          "count": 5,
+          "p50_ms": 427.3,
+          "p95_ms": 548.8,
+          "p99_ms": 612.4,
+          "mean_ms": 451.9,
+          "min_ms": 398.2,
+          "max_ms": 625.7
+        }
+      },
+      "point_lookup": {
+        "count": 5,
+        "p50_ms": 241.8,
+        "p95_ms": 286.3,
+        "p99_ms": 309.6,
+        "mean_ms": 250.7,
+        "min_ms": 229.4,
+        "max_ms": 314.2
+      },
+      "indexed_lookup": {
+        "count": 5,
+        "p50_ms": 236.2,
+        "p95_ms": 278.9,
+        "p99_ms": 301.5,
+        "mean_ms": 244.1,
+        "min_ms": 224.8,
+        "max_ms": 306.7
+      },
+      "indexed_property": "handle",
+      "aggregation": {
+        "count": 5,
+        "p50_ms": 258.4,
+        "p95_ms": 326.1,
+        "p99_ms": 358.7,
+        "mean_ms": 271.6,
+        "min_ms": 244.9,
+        "max_ms": 365.4
+      },
+      "mixed": [
+        {
+          "concurrency": 1,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 10,
+          "qps": 5.0
+        },
+        {
+          "concurrency": 5,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 32,
+          "qps": 16.0
+        },
+        {
+          "concurrency": 10,
+          "duration_seconds": 2,
+          "read_write_ratio": "80/20",
+          "total_ops": 58,
+          "qps": 29.0
+        }
+      ],
+      "footprint": {
+        "node_count": 35854,
+        "rel_count": 100000,
+        "note": "Stored-data size is not exposed through the benchmark query."
+      },
+      "caveats": [
+        "Estimated values only.",
+        "Public cloud WebSocket latency is included in the prediction.",
+        "Results are not directly comparable to databases running locally because deployment topology differs."
+      ]
+    }
+  },
+  "ranking": {
+    "ingestion_speed": [
+      "memgraph",
+      "neo4j_aura",
+      "arangodb",
+      "cognodb",
+      "surrealdb"
+    ],
+    "1hop_traversal_latency": [
+      "memgraph",
+      "neo4j_aura",
+      "arangodb",
+      "cognodb",
+      "surrealdb"
+    ],
+    "point_lookup_latency": [
+      "memgraph",
+      "neo4j_aura",
+      "arangodb",
+      "cognodb",
+      "surrealdb"
+    ],
+    "mixed_workload_qps": [
+      "memgraph",
+      "neo4j_aura",
+      "arangodb",
+      "cognodb",
+      "surrealdb"
+    ]
+  },
+  "summary": {
+    "predicted_fastest_for_graph_traversal": "memgraph",
+    "predicted_fastest_for_ingestion": "memgraph",
+    "predicted_best_managed_graph_service": "neo4j_aura",
+    "predicted_best_multi_model_database": "arangodb",
+    "predicted_lightweight_or_specialized_candidate": "cognodb",
+    "predicted_highest_network_latency": "surrealdb",
+    "important_note": "These rankings are hypotheses based on the benchmark architecture and deployment setup. They must be replaced or validated with actual benchmark results."
+  }
+}
